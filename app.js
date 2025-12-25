@@ -1,71 +1,72 @@
-const taskInput = document.getElementById("taskInput");
+const input = document.getElementById("taskInput");
 const addBtn = document.getElementById("addBtn");
-const taskList = document.getElementById("taskList");
-const filters = document.querySelectorAll(".filter");
-const taskCount = document.getElementById("taskCount");
-const clearCompleted = document.getElementById("clearCompleted");
+const list = document.getElementById("taskList");
+const count = document.getElementById("count");
+const clearBtn = document.getElementById("clear");
+const filters = document.querySelectorAll(".filter-btn");
 
 let tasks = [];
 
-function renderTasks(filter = "all") {
-    taskList.innerHTML = "";
+function render(filter = "all") {
+  list.innerHTML = "";
 
-    let filteredTasks = tasks.filter(task => {
-        if (filter === "active") return !task.completed;
-        if (filter === "completed") return task.completed;
-        return true;
-    });
+  const filtered = tasks.filter(task => {
+    if (filter === "active") return !task.done;
+    if (filter === "completed") return task.done;
+    return true;
+  });
 
-    filteredTasks.forEach((task, index) => {
-        const li = document.createElement("li");
-        if (task.completed) li.classList.add("completed");
+  filtered.forEach((task, index) => {
+    const li = document.createElement("li");
+    li.className = "list-group-item";
+    if (task.done) li.classList.add("completed");
 
-        li.innerHTML = `
-            <span>${task.text}</span>
-            <button onclick="deleteTask(${index})">✖</button>
-        `;
+    li.innerHTML = `
+      <span>${task.text}</span>
+      <button class="delete-btn">✖</button>
+    `;
 
-        li.addEventListener("click", () => toggleTask(index));
-        taskList.appendChild(li);
-    });
+    li.querySelector("span").onclick = () => {
+      tasks[index].done = !tasks[index].done;
+      render(getActiveFilter());
+    };
 
-    taskCount.textContent = `${tasks.length} Tasks`;
+    li.querySelector("button").onclick = () => {
+      tasks.splice(index, 1);
+      render(getActiveFilter());
+    };
+
+    list.appendChild(li);
+  });
+
+  count.textContent = `${tasks.length} tasks`;
 }
 
-function addTask() {
-    if (taskInput.value.trim() === "") return;
-
-    tasks.push({ text: taskInput.value, completed: false });
-    taskInput.value = "";
-    renderTasks();
+function getActiveFilter() {
+  return document.querySelector(".filter-btn.active").dataset.filter;
 }
 
-function toggleTask(index) {
-    tasks[index].completed = !tasks[index].completed;
-    renderTasks(document.querySelector(".filter.active").dataset.filter);
-}
+addBtn.onclick = () => {
+  if (!input.value.trim()) return;
+  tasks.push({ text: input.value, done: false });
+  input.value = "";
+  render(getActiveFilter());
+};
 
-function deleteTask(index) {
-    tasks.splice(index, 1);
-    renderTasks();
-}
-
-addBtn.addEventListener("click", addTask);
-
-taskInput.addEventListener("keypress", e => {
-    if (e.key === "Enter") addTask();
+input.addEventListener("keypress", e => {
+  if (e.key === "Enter") addBtn.click();
 });
 
 filters.forEach(btn => {
-    btn.addEventListener("click", () => {
-        filters.forEach(b => b.classList.remove("active"));
-        btn.classList.add("active");
-        renderTasks(btn.dataset.filter);
-    });
+  btn.onclick = () => {
+    filters.forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    render(btn.dataset.filter);
+  };
 });
 
-clearCompleted.addEventListener("click", () => {
-    tasks = tasks.filter(task => !task.completed);
-    renderTasks();
-});
+clearBtn.onclick = () => {
+  tasks = tasks.filter(task => !task.done);
+  render(getActiveFilter());
+};
 
